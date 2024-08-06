@@ -1,0 +1,58 @@
+-- LocalScript placed in StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local mouse = player:GetMouse()
+
+local targetPlayer = nil
+local isLockedOn = false
+
+-- Function to update the camera to look at the target player's HumanoidRootPart
+local function updateCamera()
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local targetPart = targetPlayer.Character.HumanoidRootPart
+        camera.CFrame = CFrame.new(camera.CFrame.Position, targetPart.Position)
+    end
+end
+
+-- Function to find the player under the mouse cursor
+local function findTargetPlayer()
+    local ray = camera:ScreenPointToRay(mouse.X, mouse.Y)
+    local part, position = workspace:FindPartOnRay(ray, player.Character)
+    if part and part.Parent and part.Parent:FindFirstChildOfClass("Humanoid") then
+        local character = part.Parent
+        local player = Players:GetPlayerFromCharacter(character)
+        if player and player ~= Players.LocalPlayer then
+            return player
+        end
+    end
+    return nil
+end
+
+-- Event when the "C" key is pressed
+-- You can Update the "C" key to what you need it to be
+
+local function onKeyPress(input)
+    if input.KeyCode == Enum.KeyCode.C then
+        if isLockedOn then
+            isLockedOn = false
+            targetPlayer = nil
+        else
+            targetPlayer = findTargetPlayer()
+            isLockedOn = targetPlayer ~= nil
+        end
+    end
+end
+
+-- Connect input events
+UserInputService.InputBegan:Connect(onKeyPress)
+
+-- Update camera lock in RenderStepped
+RunService.RenderStepped:Connect(function()
+    if isLockedOn then
+        updateCamera()
+    end
+end)
