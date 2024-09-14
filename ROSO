@@ -1,0 +1,66 @@
+-- LocalScript code to lock onto a player's HumanoidRootPart and display their username
+
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local camera = workspace.CurrentCamera
+
+local lockedTarget = nil
+local display = Instance.new("BillboardGui")
+local textLabel = Instance.new("TextLabel")
+
+-- Set up the BillboardGui for displaying the username
+display.Size = UDim2.new(0, 200, 0, 50)
+display.Adornee = nil
+display.Parent = player.PlayerGui
+
+textLabel.Size = UDim2.new(1, 0, 1, 0)
+textLabel.BackgroundTransparency = 1
+textLabel.TextColor3 = Color3.new(1, 1, 1)
+textLabel.TextStrokeTransparency = 0.5
+textLabel.TextScaled = true
+textLabel.Parent = display
+
+-- Function to handle locking onto a target
+local function lockOn()
+    if lockedTarget then
+        lockedTarget = nil
+        display.Adornee = nil
+        textLabel.Text = ""
+        return
+    end
+
+    local target = nil
+    local closestDistance = math.huge
+    
+    -- Raycast to find the nearest player
+    local ray = camera:ScreenPointToRay(mouse.X, mouse.Y)
+    local part, position = workspace:FindPartOnRay(ray, player.Character, false, true)
+
+    if part and part.Parent and part.Parent:FindFirstChild("HumanoidRootPart") then
+        target = part.Parent
+        local distance = (camera.CFrame.Position - target.HumanoidRootPart.Position).magnitude
+        if distance < closestDistance then
+            closestDistance = distance
+            lockedTarget = target
+        end
+    end
+
+    if lockedTarget then
+        display.Adornee = lockedTarget.HumanoidRootPart
+        textLabel.Text = lockedTarget.Name
+    end
+end
+
+-- Connect the function to the "T" key press
+mouse.KeyDown:Connect(function(key)
+    if key == "t" or key == "T" then
+        lockOn()
+    end
+end)
+
+-- Optionally, handle character respawn
+player.CharacterAdded:Connect(function()
+    lockedTarget = nil
+    display.Adornee = nil
+    textLabel.Text = ""
+end)
